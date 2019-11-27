@@ -7,7 +7,10 @@ import (
 	"strconv"
 )
 
-func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout uint16, dbmsPubKey string, funcErr error) {
+// Function Conf () supplies the conf data of package github.com/loc36-svc/svc1--svc. It
+// works with file "conf.yml".
+func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout uint16,
+	dbmsPubKey string, funcErr error) {
 	/*  ALGORITHM
 
 		step 100: load conf file
@@ -51,7 +54,8 @@ func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout u
 
 	// step 130 .. {
 	if dbmsUser == "" {
-		funcErr = err.New ("Conf data 'dbms_user_name': Data not provided.", nil, nil)
+		funcErr = err.New ("Conf data 'dbms_user_name': Data not provided.", nil,
+			nil)
 		return
 	}
 	// .. }
@@ -61,7 +65,8 @@ func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout u
 
 	// step 150 .. {
 	if userPass == "" {
-		funcErr = err.New ("Conf data 'dbms_user_pass': Data not provided.", nil, nil)
+		funcErr = err.New ("Conf data 'dbms_user_pass': Data not provided.", nil,
+			nil)
 		return
 	}
 	// .. }
@@ -72,7 +77,8 @@ func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout u
 	// step 170 and 180 .. {
 	intConnTimeout, errY := strconv.Atoi (strConnTimeout)
 	if errY != nil || intConnTimeout == 0 || intConnTimeout > 960 {
-		funcErr = err.New ("Conf data 'conn_timeout': Value seems invalid.", nil, nil, errY)
+		funcErr = err.New ("Conf data 'conn_timeout': Value seems invalid.", nil,
+			nil, errY)
 		return
 	}
 	connTimeout = uint16 (intConnTimeout)
@@ -84,7 +90,8 @@ func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout u
 	// step 200 and 210 .. {
 	intWrteTimeout, errA := strconv.Atoi (strWrteTimeout)
 	if errA != nil || intWrteTimeout == 0 || intWrteTimeout > 960 {
-		funcErr = err.New ("Conf data 'wrte_timeout': Value seems invalid.", nil, nil, errA)
+		funcErr = err.New ("Conf data 'wrte_timeout': Value seems invalid.", nil,
+			nil, errA)
 		return
 	}
 	wrteTimeout = uint16 (intWrteTimeout)
@@ -96,7 +103,8 @@ func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout u
 	// step 230 and 240 .. {
 	intReadTimeout, errB := strconv.Atoi (strReadTimeout)
 	if errB != nil || intReadTimeout == 0 || intReadTimeout > 960 {
-		funcErr = err.New ("Conf data 'read_timeout': Value seems invalid.", nil, nil, errB)
+		funcErr = err.New ("Conf data 'read_timeout': Value seems invalid.", nil,
+			nil, errB)
 		return
 	}
 	readTimeout = uint16 (intReadTimeout)
@@ -108,14 +116,16 @@ func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout u
 	// step 260 .. {
 	yes, errC := afero.Exists (afero.NewOsFs (), dbmsPubKey)
 	if errC != nil {
-		funcErr = err.New ("Conf data 'dbms_pub_key': Unable to confirm file's existence.", nil, nil, errC)
+		funcErr = err.New ("Conf data 'dbms_pub_key': Unable to confirm file's " +
+			"existence.", nil, nil, errC)
 		return
 	}
 	// .. }
 
 	// step 270 .. {
 	if yes == false {
-		funcErr = err.New ("Conf data 'dbms_pub_key': File does not exist.", nil, nil)
+		funcErr = err.New ("Conf data 'dbms_pub_key': File does not exist.", nil,
+			nil)
 		return
 	}
 	// .. }
