@@ -1,38 +1,61 @@
 package lib
 
-import (
-	viperLib "github.com/qamarian-lib/viper"
-	"github.com/spf13/afero"
-)
+func Conf () (dbUser, dbPass string, connTimeout, writeTimeout, readTimeout uint16, dbmsPubKey string, err error) {
+	/*  ALGORITHM
 
-func ServiceConf () (dbUser, dbPass string, connTimeout, writeTimeout, readTimeout uint16, dbmsPubKey string, err error) {
-	conf, errX := viperLib.NewFileViper (serviceConf_ConfFileName, "yaml")
+		step 100: load conf file
+		step 110: if loading fails: handle error
+
+		step 120: get data 'dbms_user_name'
+		step 130: if no data is available: return error
+
+		step 140: get data 'dbms_user_pass'
+		step 150: if no data is available: return error
+
+		step 160: get data 'conn_timeout'
+		step 170: check data validity
+		step 180: if data is invalid: return error
+
+		step 190: get data 'wrte_timeout'
+		step 200: check data validity
+		step 210: if data is invalid: return error
+
+		step 220: get data 'read_timeout'
+		step 230: check data validity
+		step 240: if data is invalid: return error
+
+		step 250: get data 'dbms_pub_key'
+		step 260: if no data is available: return error
+	*/
+
+	// step 100 ..1.. {
+	conf, errX := viperLib.NewFileViper (confFileName, "yaml")
 	if errX != nil {
 		err = err.New ("Unable to load conf file.", nil, nil, errX)
 		return
 	}
+	// ..1.. }
 
-	// Processing conf data 'dbms_user_name'.  ..1.. {
-	if conf.GetString ("dbms_user_name") == "" {
-		err = err.New ("Conf data 'dbms_user_name': Data not set.", nil, nil)
-		return
-	}
 	dbUser = conf.GetString ("dbms_user_name")
-	// .. }
 
-	// Processing conf data 'dbms_user_pass'.  ..1.. {
-	if conf.GetString ("dbms_user_pass") == "" {
-		err = err.New ("Conf data 'dbms_user_pass': Data not set.", nil, nil)
+	// step 110 ..1.. {
+	if dbUser == "" {
+		err = err.New ("Conf data 'dbms_user_name': Data not provided.", nil, nil)
 		return
 	}
+	// .. }
+
 	dbPass = conf.GetString ("dbms_user_pass")
-	// .. }
 
-	// Processing conf data 'conn_timeout'.  ..1.. {
-	if conf.GetString ("conn_timeout") == "" {
-		err = err.New ("Conf data 'conn_timeout': Data not set.", nil, nil)
+	// step 100 ..1.. {
+	if dbPass == "" {
+		err = err.New ("Conf data 'dbms_user_pass': Data not provided.", nil, nil)
 		return
 	}
+	// .. }
+
+	strConnTimeout := conf.GetString ("conn_timeout")
+
 	timeoutF, errF := strconv.Atoi (conf.GetString ("conn_timeout"))
 	if errF != nil {
 		err = err.New ("Conf data 'conn_timeout': Value seems invalid.", nil, nil, errF)
@@ -108,4 +131,4 @@ func ServiceConf () (dbUser, dbPass string, connTimeout, writeTimeout, readTimeo
 	}
 	// .. }
 }
-var serviceConf_ConfFileName = "serviceConf.yml"
+var confFileName = "conf.yml"
