@@ -1,16 +1,23 @@
 package lib
 
-func Conf () (dbUser, dbPass string, connTimeout, writeTimeout, readTimeout uint16, dbmsPubKey string, err error) {
+import (
+	"github.com/qamarian-dtp/err"
+	"github.com/qamarian-lib/viper"
+	"github.com/spf13/afero"
+	"strconv"
+)
+
+func Conf () (dbmsUser, userPass string, connTimeout, wrteTimeout, readTimeout uint16, dbmsPubKey string, funcErr error) {
 	/*  ALGORITHM
 
 		step 100: load conf file
 		step 110: if loading fails: handle error
 
 		step 120: get data 'dbms_user_name'
-		step 130: if no data is available: return error
+		step 130: if no data was provided: return error
 
 		step 140: get data 'dbms_user_pass'
-		step 150: if no data is available: return error
+		step 150: if no data was provided: return error
 
 		step 160: get data 'conn_timeout'
 		step 170: check data validity
@@ -25,110 +32,94 @@ func Conf () (dbUser, dbPass string, connTimeout, writeTimeout, readTimeout uint
 		step 240: if data is invalid: return error
 
 		step 250: get data 'dbms_pub_key'
-		step 260: if no data is available: return error
+		step 260: check if file exists
+		step 270: if file does not exists: return error
 	*/
 
-	// step 100 ..1.. {
-	conf, errX := viperLib.NewFileViper (confFileName, "yaml")
+	// step 100
+	conf, errX := viper.NewFileViper (confFileName, "yaml")
+
+	// step 110 .. {
 	if errX != nil {
-		err = err.New ("Unable to load conf file.", nil, nil, errX)
-		return
-	}
-	// ..1.. }
-
-	dbUser = conf.GetString ("dbms_user_name")
-
-	// step 110 ..1.. {
-	if dbUser == "" {
-		err = err.New ("Conf data 'dbms_user_name': Data not provided.", nil, nil)
+		funcErr = err.New ("Unable to load conf file.", nil, nil, errX)
 		return
 	}
 	// .. }
 
-	dbPass = conf.GetString ("dbms_user_pass")
+	// step 120
+	dbmsUser = conf.GetString ("dbms_user_name")
 
-	// step 100 ..1.. {
-	if dbPass == "" {
-		err = err.New ("Conf data 'dbms_user_pass': Data not provided.", nil, nil)
+	// step 130 .. {
+	if dbmsUser == "" {
+		funcErr = err.New ("Conf data 'dbms_user_name': Data not provided.", nil, nil)
 		return
 	}
 	// .. }
 
+	// step 140
+	userPass = conf.GetString ("dbms_user_pass")
+
+	// step 150 .. {
+	if userPass == "" {
+		funcErr = err.New ("Conf data 'dbms_user_pass': Data not provided.", nil, nil)
+		return
+	}
+	// .. }
+
+	// step 160
 	strConnTimeout := conf.GetString ("conn_timeout")
 
-	timeoutF, errF := strconv.Atoi (conf.GetString ("conn_timeout"))
-	if errF != nil {
-		err = err.New ("Conf data 'conn_timeout': Value seems invalid.", nil, nil, errF)
+	// step 170 and 180 .. {
+	intConnTimeout, errY := strconv.Atoi (strConnTimeout)
+	if errY != nil || intConnTimeout == 0 || intConnTimeout > 960 {
+		funcErr = err.New ("Conf data 'conn_timeout': Value seems invalid.", nil, nil, errY)
 		return
 	}
-	if timeoutF == 0 {
-		err = err.New ("Conf data 'conn_timeout': Timeout can not be zero.", nil, nil)
-		return
-	}
-	if timeoutF > 960 {
-		err = err.New ("Conf data 'conn_timeout': Timeout can not be greater than 960 seconds (16 minutes).", nil, nil)
-		return
-	}
-	connTimeout = uint16 (timeoutF)
+	connTimeout = uint16 (intConnTimeout)
 	// .. }
 
-	// Processing conf data 'wrte_timeout'.  ..1.. {
-	if conf.GetString ("wrte_timeout") == "" {
-		err = err.New ("Conf data 'wrte_timeout': Data not set.", nil, nil)
+	// step 190
+	strWrteTimeout := conf.GetString ("wrte_timeout")
+
+	// step 200 and 210 .. {
+	intWrteTimeout, errA := strconv.Atoi (strWrteTimeout)
+	if errA != nil || intWrteTimeout == 0 || intWrteTimeout > 960 {
+		funcErr = err.New ("Conf data 'wrte_timeout': Value seems invalid.", nil, nil, errA)
 		return
 	}
-	timeoutF, errF := strconv.Atoi (conf.GetString ("wrte_timeout"))
-	if errF != nil {
-		err = err.New ("Conf data 'wrte_timeout': Value seems invalid.", nil, nil, errF)
-		return
-	}
-	if timeoutF == 0 {
-		err = err.New ("Conf data 'wrte_timeout': Timeout can not be zero.", nil, nil)
-		return
-	}
-	if timeoutF > 960 {
-		err = err.New ("Conf data 'wrte_timeout': Timeout can not be greater than 960 seconds (16 minutes).", nil, nil)
-		return
-	}
-	writeTimeout = uint16 (timeoutF)
+	wrteTimeout = uint16 (intWrteTimeout)
 	// .. }
 
-	// Processing conf data 'read_timeout'.  ..1.. {
-	if conf.GetString ("read_timeout") == "" {
-		err = err.New ("Conf data 'read_timeout': Data not set.", nil, nil)
+	// step 220
+	strReadTimeout := conf.GetString ("read_timeout")
+
+	// step 230 and 240 .. {
+	intReadTimeout, errB := strconv.Atoi (strReadTimeout)
+	if errB != nil || intReadTimeout == 0 || intReadTimeout > 960 {
+		funcErr = err.New ("Conf data 'read_timeout': Value seems invalid.", nil, nil, errB)
 		return
 	}
-	timeoutF, errF := strconv.Atoi (conf.GetString ("read_timeout"))
-	if errF != nil {
-		err = err.New ("Conf data 'read_timeout': Value seems invalid.", nil, nil, errF)
-		return
-	}
-	if timeoutF == 0 {
-		err = err.New ("Conf data 'read_timeout': Timeout can not be zero.", nil, nil)
-		return
-	}
-	if timeoutF > 960 {
-		err = err.New ("Conf data 'read_timeout': Timeout can not be greater than 960 seconds (16 minutes).", nil, nil)
-		return
-	}
-	readTimeout = uint16 (timeoutF)
+	readTimeout = uint16 (intReadTimeout)
 	// .. }
 
-	// Processing conf data 'dbms_pub_key'.  ..1.. {	
-	if conf.GetString ("dbms_pub_key") == "" {
-		err = err.New ("Conf data 'dbms_pub_key': Data not set.", nil, nil)
-		return
-	}
+	// step 250
 	dbmsPubKey = conf.GetString ("dbms_pub_key")
-	okJ, errJ := afero.Exists (afero.NewOsFs (), dbmsPubKey)
-	if errJ != nil {
-		err = err.New ("Conf data 'dbms_pub_key': Unable to confirm existence of file.", nil, nil, errJ)
-		return
-	}
-	if okJ == false {
-		err = err.New ("Conf data 'dbms_pub_key': File not found.", nil, nil)
+
+	// step 260 .. {
+	yes, errC := afero.Exists (afero.NewOsFs (), dbmsPubKey)
+	if errC != nil {
+		funcErr = err.New ("Conf data 'dbms_pub_key': Unable to confirm file's existence.", nil, nil, errC)
 		return
 	}
 	// .. }
+
+	// step 270 .. {
+	if yes == false {
+		funcErr = err.New ("Conf data 'dbms_pub_key': File does not exist.", nil, nil)
+		return
+	}
+	// .. }
+
+	return
 }
 var confFileName = "conf.yml"
